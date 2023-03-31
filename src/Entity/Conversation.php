@@ -7,6 +7,7 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use App\Controller\CheckPostConversationController;
 use App\Controller\GetConversationCollectionController;
 use App\Controller\GetConversationController;
 use App\Repository\ConversationRepository;
@@ -24,21 +25,21 @@ use Symfony\Component\Validator\Constraints as Assert;
             controller: GetConversationCollectionController::class,
             normalizationContext: ['groups' => ['conversation:read']],
             security: "is_granted('ROLE_USER')",
-            name: 'conversation_limited'
+            name: 'conversations_limited'
         ),
-        new Post(denormalizationContext: ['groups' => ['conversation:write']], security: "is_granted('ROLE_USER')"),
+        new Post(controller: CheckPostConversationController::class, denormalizationContext: ['groups' => ['conversation:write']], security: "is_granted('ROLE_USER')"),
         new Get(
-            uriTemplate: '/conversation/{id}',
+            uriTemplate: '/conversations/{id}',
             controller: GetConversationController::class,
             normalizationContext: ['groups' => ['conversation:read', 'conversation:inspect']],
             security: "is_granted('ROLE_USER')",
             name: 'conversation_limited'
             
         ),
-        new Delete(security: "is_granted('ROLE_ADMIN') or object.owner == user"),
+        new Delete(security: "is_granted('ROLE_ADMIN') or object.getOwner() == user"),
     ],
     normalizationContext: ['groups' => ['conversation:read']],
-    denormalizationContext: ['groups' => ['conversation:write', 'conversation:update']],
+    denormalizationContext: ['groups' => ['conversation:write']],
 )]
 class Conversation
 {
@@ -49,14 +50,16 @@ class Conversation
 
     #[ORM\ManyToOne(inversedBy: 'ownedConversation')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['conversation:read'])]
     private ?User $owner = null;
 
-    #[Groups(['conversation:write'])]
+    #[Groups(['conversation:read', 'conversation:write'])]
     #[ORM\ManyToOne(inversedBy: 'participedConversation')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $targetUser = null;
 
     #[ORM\OneToMany(mappedBy: 'relatedConversation', targetEntity: PrivateMessage::class, orphanRemoval: true)]
+    #[Groups(['conversation:read'])]
     private Collection $privateMessages;
 
     public function __construct()

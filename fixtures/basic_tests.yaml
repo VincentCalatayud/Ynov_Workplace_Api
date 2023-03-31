@@ -6,16 +6,20 @@ App\Entity\User:
 
 App\Entity\Group:
   group_A:
-    owner: '@user_1'
+    owner: "@user_1"
     name: <name()>
     description: <text()>
-    members: '@user_{1..5}'
+    members: "@user_{1..5}"
   group_B:
-    owner: '@user_1'
+    owner: "@user_1"
     name: <name()>
     description: <text()>
   group_C:
-    owner: '@user_2'
+    owner: "@user_2"
     name: <name()>
     description: <text()>
 
+App\Entity\Conversation:
+  conversation_A:
+    owner: "@user_1"
+    targetUser: "@user_2"
